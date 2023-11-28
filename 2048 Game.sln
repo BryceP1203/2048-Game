@@ -1,31 +1,404 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34018.315
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "2048 Game", "2048 Game\2048 Game.vcxproj", "{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Debug|x64.ActiveCfg = Debug|x64
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Debug|x64.Build.0 = Debug|x64
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Debug|x86.ActiveCfg = Debug|Win32
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Debug|x86.Build.0 = Debug|Win32
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Release|x64.ActiveCfg = Release|x64
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Release|x64.Build.0 = Release|x64
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Release|x86.ActiveCfg = Release|Win32
-		{2BB9646F-55F7-4BE8-B77E-6A9A55AFA55E}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {4D6E9C48-7D7E-4787-9CBF-3AE50E5BAE40}
-	EndGlobalSection
-EndGlobal
+//
+// Jeg McIntire and Bryce Pagan 
+// 2048 Game 
+// Due: 11/28/2023
+//
+
+#include <iostream>
+#include <ctime>
+#include <iomanip>
+using namespace std;
+
+//Global variables 
+const int GRIDSIZE = 4;
+int board[GRIDSIZE][GRIDSIZE];
+
+//Creates an empty 4x4 board using a 2D arry
+void createBoard() {
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            board[i][j] = 0;
+        }
+    }
+
+    //Creates the two initial randomly placed numbers
+    srand(time(0)); // Creates a random number, with respect to the time since there is no "perfect random"
+    int randomRow1 = 0;
+    int randomCol1 = 0;
+    //"% GRIDSIZE" used to ensure the randomly generated numbers are possible values within the board
+    randomRow1 = rand() % GRIDSIZE;
+    randomCol1 = rand() % GRIDSIZE;
+    int randomRow2 = 0;
+    int randomCol2 = 0;
+    //While loop used to make sure the second random generation doesn't overlap with the first 
+    while (true) {
+        randomRow2 = rand() % GRIDSIZE;
+        randomCol2 = rand() % GRIDSIZE;
+        if (!(randomRow1 == randomRow2 && randomCol1 == randomCol2)) {
+            break;
+        }
+    }
+    //Place the value '2' in both randomly generated locations 
+    board[randomRow1][randomCol1] = 2;
+    board[randomRow2][randomCol2] = 2;
+}
+
+int showScore() {
+    int points = 0;
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            points += board[i][j];
+        }
+    }
+    return points;
+}
+
+void printBoard() {
+    cout << "--------------------------";
+    for (int i = 0; i < GRIDSIZE; ++i) { //Row 
+        cout << setw(4) << endl;
+        for (int j = 0; j < GRIDSIZE; ++j) { // Column
+            cout << "    ";
+            cout << board[i][j];
+        }
+        cout << setw(4) << endl;
+    }
+    cout << "--------------------------" << endl;
+    cout << "Current Score: " << showScore() << endl;
+}
+
+void generateRandomTile() {
+    int randomRow = 0;
+    int randomCol = 0;
+
+    //While loop used to create random locations on the 4x4 grid, stops after finding an empty space on the grid
+    while (true) {
+        randomRow = rand() % GRIDSIZE;
+        randomCol = rand() % GRIDSIZE;
+        if (board[randomRow][randomCol] == 0) {
+            break;
+        }
+    }
+    board[randomRow][randomCol] = 2;
+}
+//
+//
+// 
+//GAME FUNCTIONS
+// 
+//
+//  
+bool continueGame() {
+    //First searches for any empty space 
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            if (board[i][j] == 0) {
+                return true;
+            }
+        }
+    }
+
+    //If no empty tiles are avaiable, moves on to check for any possible moves,
+    //Searches for connecting spaces horizontally within the 2D array for possible combinations
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE - 1; ++j) {
+            if (board[i][j] == board[i][j + 1]) {
+                return true;
+            }
+        }
+    }
+
+    //Searches for connecting spaces vertically within the 2D array for possible combinations
+    for (int i = 0; i < GRIDSIZE - 1; ++i) {
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            if (board[i][j] == board[i + 1][j]) {
+                return true;
+            }
+        }
+    }
+
+    //If all of these conditions are passed, then that means the game is over and false is returned
+    return false;
+}
+
+bool runGame() {
+    //Any 'true' returns means the game is finished
+    //Any 'false' returns means the game is NOT finished
+
+    //Starts by looking for the value 2048 within the 2D arry
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            if (board[i][j] == 2048) {
+                cout << "YOU WIN!!!!" << endl;
+                return true;
+            }
+        }
+    }
+
+    //If 2048 is NOT found, starts to run the continueGame() function 
+    if (!(continueGame())) {
+        //If it passes through the function continueGame() and returns false, that means the player has compleatly run out of options, game over!
+        cout << "YOU LOSE!!!!" << endl;
+        return true;
+    }
+
+    //Return statement needed here for when the game is incomplete 
+    return false;
+}
+//
+// 
+// 
+//MOVE FUNCTIONS 
+// 
+// 
+//
+void moveLeft() {
+    //Needs to loop through each row
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        //tempArry created to hold onto any values on the board that are NOT zero while scanning 
+        //index created to hold onto where tempArry is on the board's 2D arry horizontally 
+        //Both variables get reset to 0 with respect to each new row
+        int tempArry[GRIDSIZE] = { 0 };
+        int index = 0;
+
+        //This for-loop will move every element to tempArry that does not have the value 0
+        //index will increase when a value is found in order to slot the next column's numbers per row 
+        for (int j = 0; j < GRIDSIZE; ++j) {
+            if (board[i][j] != 0) {
+                tempArry[index++] = board[i][j];
+            }
+        }
+
+        //This for-loop will work its way backwards through all of the saved index values 
+        //Because this is the moveLeft() function, all values are combined horizontally to the left 
+        for (int j = 0; j < index - 1; ++j) {
+            //This if condition tests for adjacent and equal values 
+            if (tempArry[j] == tempArry[j + 1]) {
+                //When adjacent values are found, the value to the left is multiplied by 2 and the value to the right is set to 0
+                tempArry[j] *= 2;
+                tempArry[j + 1] = 0; //generateRandomTile() may later turn this new 0 into a 2 before the user can notice the change
+            }
+        }
+
+        //Before a new row is looped through, resetting tempArry, we must move the shifted and combined values onto the board
+        //Value 'i' is each row
+        for (int j = 0, k = 0; j < GRIDSIZE; ++j) {
+            board[i][j] = tempArry[k++];
+        }
+    }
+    generateRandomTile();
+    printBoard();
+}
+void moveRight() {
+    //Needs to loop through each row
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        //tempArry created to hold onto any values on the board that are NOT zero while scanning 
+        //index created to hold onto where tempArry is on the board's 2D arry horizontally
+        //Because this is the moveRight() function, index needs to start on the right
+        //Both variables get reset with respect to each new row
+        int tempArry[GRIDSIZE] = { 0 };
+        int index = GRIDSIZE - 1;
+
+        //This for-loop will move every element to tempArry that does not have the value 0 starting from the right 
+        //index will decrease when a value is found in order to slot the next column's numbers per row 
+        for (int j = GRIDSIZE - 1; j >= 0; --j) {
+            if (board[i][j] != 0) {
+                tempArry[index--] = board[i][j];
+            }
+        }
+
+        //This for-loop will work its way through all of the saved index values from right to left 
+        //Because this is the moveRight() function, all values are combined horizontally to the right
+        for (int j = GRIDSIZE - 1; j > 0; --j) {
+            //This if-condition tests for adjacent and equal values 
+            if (tempArry[j] == tempArry[j - 1]) {
+                //When adjacent values are found, the value to the right is multiplied by 2 and the value to the left is set to 0
+                tempArry[j] *= 2;
+                tempArry[j - 1] = 0; //generateRandomTile() may later turn this new 0 into a 2 before the user can notice the change
+            }
+        }
+
+        //Before a new row is looped through, resetting tempArry, we must move the shifted and combined values onto the board
+        //Value 'i' is each row
+        for (int j = GRIDSIZE - 1, k = GRIDSIZE - 1; j >= 0; --j) {
+            board[i][j] = tempArry[k--];
+        }
+    }
+    generateRandomTile();
+    printBoard();
+}
+void moveUp() {
+    //Needs to loop through each column 
+    for (int j = 0; j < GRIDSIZE; ++j) {
+        //tempArry created to hold onto any values on the board that are NOT zero while scanning 
+        //index created to hold onto where tempArry is on the board's 2D arry vertically  
+        int tempArry[GRIDSIZE] = { 0 };
+        int index = 0;
+
+        //This for-loop will move every element to tempArry that does not have the value 0 starting from the top 
+        //index will increase when a value is found in order to slot the next row's numbers per column 
+        for (int i = 0; i < GRIDSIZE; ++i) {
+            if (board[i][j] != 0) {
+                tempArry[index++] = board[i][j];
+            }
+        }
+        //This for-loop will work its way through all of the saved index values 
+        //Because this is the moveUp() function, all values are combined vertically up
+        for (int i = 0; i < index - 1; ++i) {
+            if (tempArry[i] == tempArry[i + 1]) {
+                tempArry[i] *= 2;
+                tempArry[i + 1] = 0; //generateRandomTile() may later turn this new 0 into a 2 before the user can notice the change
+            }
+        }
+
+        //Before a new column is looped through, resetting tempArry, we must move the shifted and combined values onto the board
+        //Value 'j' is each column
+        for (int i = 0, k = 0; i < GRIDSIZE; ++i) {
+            board[i][j] = tempArry[k++];
+        }
+    }
+    generateRandomTile();
+    printBoard();
+}
+void moveDown() {
+    // Needs to loop through each column 
+    for (int j = 0; j < GRIDSIZE; ++j) {
+        // tempArry created to hold onto any values on the board that are NOT zero while scanning 
+        // index created to hold onto where tempArry is on the board's 2D array vertically  
+        int tempArry[GRIDSIZE] = { 0 };
+        int index = GRIDSIZE - 1;
+
+        // This for-loop will move every element to tempArry that does not have the value 0 starting from the bottom 
+        // index will decrease when a value is found in order to slot the next row's numbers per column 
+        for (int i = GRIDSIZE - 1; i >= 0; --i) {
+            if (board[i][j] != 0) {
+                tempArry[index--] = board[i][j];
+            }
+        }
+        // This for-loop will work its way through all of the saved index values 
+        // Because this is the moveDown() function, all values are combined vertically down
+        for (int i = GRIDSIZE - 1; i > 0; --i) {
+            if (tempArry[i] == tempArry[i - 1]) {
+                tempArry[i] *= 2;
+                tempArry[i - 1] = 0; // generateRandomTile() may later turn this new 0 into a 2 before the user can notice the change
+            }
+        }
+
+        // Before a new column is looped through, resetting tempArry, we must move the shifted and combined values onto the board
+        // Value 'j' is each column
+        for (int i = GRIDSIZE - 1, k = GRIDSIZE - 1; i >= 0; --i) {
+            board[i][j] = tempArry[k--];
+        }
+    }
+    generateRandomTile();
+    printBoard();
+}
+//
+// 
+// 
+//CONTINUE FUNCTIONS
+// 
+// 
+//
+bool continueLeft() {
+    // Check for any non-zero values that can move left
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 1; j < GRIDSIZE; ++j) {
+            // Check if the current index within the 2D arry is not zero and the location to the left is zero or equal
+            if (board[i][j] != 0 && (board[i][j - 1] == 0 || board[i][j - 1] == board[i][j])) {
+                //Returning true means there is a valid left move 
+                return true;
+            }
+        }
+    }
+    //Returning false means there is NOT a valid left move 
+    return false;
+}
+bool continueRight() {
+    // Check for any non-zero values that can move right
+    for (int i = 0; i < GRIDSIZE; ++i) {
+        for (int j = 0; j < GRIDSIZE - 1; ++j) {
+            // Check if the current index within the 2D arry is not zero and the location to the right is zero or equal
+            if (board[i][j] != 0 && (board[i][j + 1] == 0 || board[i][j + 1] == board[i][j])) {
+                //Returning true means there is a valid right move 
+                return true;
+            }
+        }
+    }
+    //Returning false means there is NOT a valid right move 
+    return false;
+}
+bool continueUp() {
+    // Check for any non-zero values that can move up
+    for (int j = 0; j < GRIDSIZE; ++j) {
+        for (int i = 1; i < GRIDSIZE; ++i) {
+            // Check if the current index within the 2D arry is not zero and the location above is zero or equal
+            if (board[i][j] != 0 && (board[i - 1][j] == 0 || board[i - 1][j] == board[i][j])) {
+                //Returning true means there is a valid up move 
+                return true;
+            }
+        }
+    }
+    //Returning false means there is NOT a valid up move 
+    return false;
+}
+bool continueDown() {
+    // Check for any non-zero values that can move down
+    for (int j = 0; j < GRIDSIZE; ++j) {
+        for (int i = 0; i < GRIDSIZE - 1; ++i) {
+            // Check if the current index within the 2D arry is not zero and the location below is zero or equal
+            if (board[i][j] != 0 && (board[i + 1][j] == 0 || board[i + 1][j] == board[i][j])) {
+                //Returning true means there is a valid down move 
+                return true;
+            }
+        }
+    }
+    //Returning false means there is NOT a valid down move 
+    return false;
+}
+int main() {
+    createBoard();
+    cout << "\n\n";
+    printBoard();
+
+    while (!(runGame())) {
+        char direction;
+        cout << "Please enter a move (L,R,U,D): " << endl;
+        cout << "L: Left" << endl;
+        cout << "R: Right" << endl;
+        cout << "U: Up" << endl;
+        cout << "D: Down" << endl;
+        cout << "Option: ";
+        cin >> direction;
+
+        bool validMove = true;
+
+        switch (direction) {
+        case 'L':
+            validMove = continueLeft();
+            if (validMove) moveLeft();
+            break;
+        case 'R':
+            validMove = continueRight();
+            if (validMove) moveRight();
+            break;
+        case 'U':
+            validMove = continueUp();
+            if (validMove) moveUp();
+            break;
+        case 'D':
+            validMove = continueDown();
+            if (validMove) moveDown();
+            break;
+        default:
+            validMove = false;
+            cout << "ERROR! You have not provided a proper input" << endl;
+        }
+
+        // Check if the move was valid, if not, ask for input again
+        if (!(validMove)) {
+            cout << "Please pick a correct direction!" << endl;
+        }
+    }
+    return 0;
+}
